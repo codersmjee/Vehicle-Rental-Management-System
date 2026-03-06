@@ -1,0 +1,234 @@
+openapi: 3.0.0
+info:
+  title: Vehicle Rental Management System API
+  version: 1.0.0
+  description: API documentation for the Vehicle Rental Management System backend.
+servers:
+  - url: http://localhost:5000
+    description: Local Server
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [admin, customer]
+    Vehicle:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        make:
+          type: string
+        model:
+          type: string
+        year:
+          type: integer
+        licensePlate:
+          type: string
+        pricePerDay:
+          type: number
+        status:
+          type: string
+          enum: [available, rented, maintenance]
+
+paths:
+  /api/users/register:
+    post:
+      summary: Register a new user
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - email
+                - password
+              properties:
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                role:
+                  type: string
+                  enum: [admin, customer]
+      responses:
+        201:
+          description: User registered successfully
+        400:
+          description: Bad request
+
+  /api/users/login:
+    post:
+      summary: Login user and get JWT
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        200:
+          description: Login successful
+        401:
+          description: Unauthorized
+
+  /api/vehicles:
+    get:
+      summary: Get all vehicles
+      tags:
+        - Vehicles
+      responses:
+        200:
+          description: List of all vehicles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Vehicle'
+    post:
+      summary: Create a new vehicle (Admin only)
+      tags:
+        - Vehicles
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - make
+                - model
+                - year
+                - licensePlate
+                - pricePerDay
+              properties:
+                make:
+                  type: string
+                model:
+                  type: string
+                year:
+                  type: integer
+                licensePlate:
+                  type: string
+                pricePerDay:
+                  type: number
+                status:
+                  type: string
+                  enum: [available, rented, maintenance]
+      responses:
+        201:
+          description: Vehicle created
+        400:
+          description: Bad request
+        403:
+          description: Forbidden
+
+  /api/vehicles/{id}:
+    get:
+      summary: Get a specific vehicle by ID
+      tags:
+        - Vehicles
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Vehicle details found
+        404:
+          description: Vehicle not found
+    put:
+      summary: Update an existing vehicle (Admin only)
+      tags:
+        - Vehicles
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                make:
+                  type: string
+                model:
+                  type: string
+                year:
+                  type: integer
+                pricePerDay:
+                  type: number
+                status:
+                  type: string
+                  enum: [available, rented, maintenance]
+      responses:
+        200:
+          description: Vehicle updated
+        400:
+          description: Bad request
+        403:
+          description: Forbidden
+    delete:
+      summary: Delete a vehicle (Admin only)
+      tags:
+        - Vehicles
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Vehicle deleted
+        404:
+          description: Vehicle not found
